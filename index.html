@@ -1,3 +1,261 @@
-<html>
-	<p> Ciao mondo </p>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Maiuscolatore Pro | Converte Testi in MAIUSCOLO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glow-button:hover { box-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
+    .text-area-custom { transition: all 0.3s ease; }
+    .text-area-custom:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen flex flex-col items-center p-4 md:p-8">
+
+  <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200">
+    <!-- Header con icona e titolo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center bg-blue-100 p-4 rounded-full mb-4">
+        <span class="text-3xl">🔠</span>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Maiuscolatore Pro</h1>
+      <p class="text-lg text-gray-600 mt-3 max-w-md mx-auto">Trasforma qualsiasi testo in MAIUSCOLO e scaricalo nel formato che preferisci</p>
+    </div>
+
+    <!-- Card per caricamento file -->
+    <div class="bg-blue-50 rounded-xl p-5 mb-6 border-2 border-dashed border-blue-200">
+      <div class="flex flex-col items-center">
+        <label for="fileInput" class="cursor-pointer flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all glow-button mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Carica file (TXT, PDF o DOCX)
+        </label>
+        <input type="file" id="fileInput" accept=".txt,.pdf,.docx" class="hidden" />
+        <p id="fileName" class="text-sm text-blue-700 font-medium"></p>
+        <p class="text-xs text-gray-500 mt-2 text-center">Supportiamo: file di testo (.txt), PDF e .docx</p>
+      </div>
+    </div>
+
+    <!-- Notifica caricamento file -->
+    <div id="fileNotification" class="hidden bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <p class="font-semibold">File caricato con successo!</p>
+          <p id="uploadedFileName" class="text-sm"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Area di testo -->
+    <div class="mb-6">
+      <label for="inputText" class="block text-sm font-medium text-gray-700 mb-2">Inserisci il tuo testo qui:</label>
+      <textarea id="inputText" rows="8" placeholder="Scrivi qui il testo da convertire in MAIUSCOLO oppure carica un file..."
+        class="text-area-custom w-full p-4 border-2 border-gray-200 rounded-xl text-gray-800 text-base resize-none focus:outline-none"></textarea>
+    </div>
+
+    <!-- Pulsante conversione -->
+    <button onclick="convertToUppercase()" 
+      class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition-all glow-button mb-4 flex items-center justify-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+      CONVERTI IN MAIUSCOLO
+    </button>
+
+    <!-- Pulsante copia -->
+    <button onclick="copyText()" 
+      class="w-full bg-gray-100 text-gray-800 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all mb-6 flex items-center justify-center gap-2 border border-gray-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+      </svg>
+      Copia testo
+    </button>
+
+    <!-- Opzioni download -->
+    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Scarica il risultato
+      </h3>
+      <p class="text-sm text-gray-600 mb-4">Scegli il formato in cui vuoi scaricare il tuo testo in maiuscolo:</p>
+      
+      <div class="flex flex-wrap gap-3">
+        <button onclick="downloadTxt()" class="flex-1 min-w-[120px] bg-gray-800 text-white py-3 px-4 rounded-lg hover:bg-gray-900 transition flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          TXT
+        </button>
+        <button onclick="downloadPDF()" class="flex-1 min-w-[120px] bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          PDF
+        </button>
+      </div>
+    </div>
+
+    <p class="text-center text-gray-400 text-xs mt-8">Tutti i processi avvengono sul tuo dispositivo - Nessun dato viene inviato online</p>
+  </div>
+
+  <script>
+    // Gestione caricamento file
+    document.getElementById("fileInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById("fileName").innerText = "File selezionato: " + file.name;
+      
+      // Mostra notifica
+      const notification = document.getElementById("fileNotification");
+      notification.classList.remove("hidden");
+      document.getElementById("uploadedFileName").innerText = file.name;
+
+      // Nascondi la notifica dopo 5 secondi
+      setTimeout(() => {
+        notification.classList.add("hidden");
+      }, 5000);
+
+      const reader = new FileReader();
+      const textarea = document.getElementById("inputText");
+
+      if (file.type === "text/plain") {
+        reader.onload = () => textarea.value = reader.result;
+        reader.readAsText(file);
+      } else if (file.type === "application/pdf") {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const pdfData = new Uint8Array(event.target.result);
+          pdfjsLib.getDocument(pdfData).promise.then(function(pdf) {
+            let text = '';
+            let pageCount = pdf.numPages;
+            let pagePromises = [];
+
+            for (let i = 1; i <= pageCount; i++) {
+              pagePromises.push(pdf.getPage(i).then(function(page) {
+                return page.getTextContent().then(function(textContent) {
+                  textContent.items.forEach(function(item) {
+                    text += item.str + ' ';
+                  });
+                });
+              }));
+            }
+
+            Promise.all(pagePromises).then(function() {
+              textarea.value = text;
+            });
+          }).catch(function(error) {
+            alert("Errore nella lettura del PDF: " + error.message);
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const arrayBuffer = event.target.result;
+          mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+            .then(function(result) {
+              textarea.value = result.value;
+            })
+            .catch(function(error) {
+              alert("Errore nella lettura del documento DOCX: " + error.message);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert("Formato non supportato. Carica un file .txt, .pdf o .docx");
+      }
+    });
+
+    // Funzione conversione in maiuscolo
+    function convertToUppercase() {
+      const input = document.getElementById("inputText");
+      if (!input.value.trim()) {
+        alert("Inserisci del testo o carica un file prima di convertire!");
+        return;
+      }
+      input.value = input.value.toUpperCase();
+      
+      // Animazione di feedback
+      input.classList.add("ring-2", "ring-blue-400");
+      setTimeout(() => {
+        input.classList.remove("ring-2", "ring-blue-400");
+      }, 500);
+    }
+
+    // Funzione copia testo
+    function copyText() {
+      const text = document.getElementById("inputText").value;
+      if (!text.trim()) {
+        alert("Non c'è nessun testo da copiare!");
+        return;
+      }
+      
+      navigator.clipboard.writeText(text).then(function() {
+        alert("Testo copiato con successo!");
+      }).catch(function() {
+        alert("Errore nel copiare il testo.");
+      });
+    }
+
+    // Funzione per il download in TXT
+    function downloadTxt() {
+      const text = document.getElementById("inputText").value;
+      if (!text.trim()) {
+        alert("Non c'è nulla da scaricare!");
+        return;
+      }
+      
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "converted_text.txt";
+      link.click();
+    }
+
+    function downloadPDF() {
+  const text = document.getElementById("inputText").value;
+  if (!text.trim()) {
+    alert("Non c'è nulla da scaricare!");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const usableWidth = pageWidth - margin * 2;
+  let y = margin;
+
+  // Divide il testo in righe adatte alla larghezza pagina
+  const lines = doc.splitTextToSize(text, usableWidth);
+
+  lines.forEach(line => {
+    if (y + 10 > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += 8;
+  });
+
+  doc.save("converted_text.pdf");
+}
+
+  </script>
+</body>
 </html>
